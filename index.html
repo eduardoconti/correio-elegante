@@ -3,54 +3,161 @@
   <head>
     <title>Socket.IO chat</title>
     <style>
-      body { margin: 0; padding-bottom: 3rem; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      body {
+        margin: 0;
+        padding-bottom: 3rem;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+      }
 
-      #form { background: rgba(0, 0, 0, 0.15); padding: 0.25rem; position: fixed; bottom: 0; left: 0; right: 0; display: flex; height: 3rem; box-sizing: border-box; backdrop-filter: blur(10px); }
-      #input { border: none; padding: 0 1rem; flex-grow: 1; border-radius: 2rem; margin: 0.25rem; }
-      #input:focus { outline: none; }
-      #form > button { background: #333; border: none; padding: 0 1rem; margin: 0.25rem; border-radius: 3px; outline: none; color: #fff; }
+      #form {
+        background: rgba(0, 0, 0, 0.15);
+        padding: 0.25rem;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        height: 3rem;
+        box-sizing: border-box;
+        backdrop-filter: blur(10px);
+      }
+      #input {
+        border: none;
+        padding: 0 1rem;
+        flex-grow: 1;
+        border-radius: 2rem;
+        margin: 0.25rem;
+      }
+      #input:focus {
+        outline: none;
+      }
+      #form > button {
+        background: #333;
+        border: none;
+        padding: 0 1rem;
+        margin: 0.25rem;
+        border-radius: 3px;
+        outline: none;
+        color: #fff;
+      }
 
-      #messages { list-style-type: none; margin: 0; padding: 0; }
-      #messages > li { padding: 0.5rem 1rem; }
-      #messages > li:nth-child(odd) { background: #efefef; }
+      #messages {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+      }
+      #messages > li {
+        padding: 0.5rem 1rem;
+      }
+      #messages > li:nth-child(odd) {
+        background: #efefef;
+      }
     </style>
   </head>
   <script src="/socket.io/socket.io.js"></script>
 
   <body>
+    <div>
+      <ul id="usuarios"></ul>
+
+      <script>
+        // Função para chamar a API e exibir os usuários
+        function fetchUsers() {
+          // URL da API que retorna a lista de usuários
+          const apiUrl = "http://localhost:3000/usuario";
+
+          // Chamada fetch para obter os dados da API
+          fetch(apiUrl)
+            .then((response) => response.json())
+            .then((data) => {
+              // Limpa a lista de usuários antes de exibir os novos
+              document.getElementById("usuarios").innerHTML = "";
+
+              // Itera sobre os usuários e cria um item de lista para cada um
+              data.forEach((user) => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${user.nome}, ${user.idade}`;
+                document.getElementById("usuarios").appendChild(listItem);
+
+                const button = document.createElement("button");
+                button.textContent = "Destinatario";
+                button.addEventListener("click", () => {
+                  const event = new CustomEvent("idDestinatario", {
+                    detail: { userId: user.id },
+                  });
+                  document.dispatchEvent(event);
+                });
+                document.getElementById("usuarios").appendChild(button);
+
+                const buttonRemetente = document.createElement("button");
+                buttonRemetente.textContent = "Remetente";
+                buttonRemetente.addEventListener("click", () => {
+                  const event = new CustomEvent("idRemetente", {
+                    detail: { userId: user.id },
+                  });
+                  document.dispatchEvent(event);
+                });
+                document
+                  .getElementById("usuarios")
+                  .appendChild(buttonRemetente);
+              });
+            })
+            .catch((error) => {
+              console.error("Erro ao buscar usuários:", error);
+            });
+        }
+
+        // Chama a função fetchUsers quando a página é carregada
+        window.onload = fetchUsers;
+      </script>
+    </div>
     <ul id="messages"></ul>
     <form id="form" action="">
       <input id="input" autocomplete="off" /><button>Send</button>
     </form>
-<script>
-   function gerarStringAleatoria(tamanho) {
-      const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let stringAleatoria = '';
-      for (let i = 0; i < tamanho; i++) {
-        const indice = Math.floor(Math.random() * caracteres.length);
-        stringAleatoria += caracteres.charAt(indice);
-      }
-      return stringAleatoria;
-    }
+    <script>
+      let destinatarioId = null;
 
+      document.addEventListener("idDestinatario", function (event) {
+        // A função é chamada quando o evento personalizado 'idDestinatario' é disparado
+        destinatarioId = event.detail.userId;
+        console.log("ID do destinatario", destinatarioId);
+        // Faça o que quiser com o destinatarioId neste script
+      });
 
-  var socket = io("", {
-    transports: ['websocket', 'polling', 'flashsocket'],
-    auth: {
-        token: gerarStringAleatoria(10)
-    }
-});
+      let remetenteId = null;
 
-  var form = document.getElementById('form');
-  var input = document.getElementById('input');
+      document.addEventListener("idRemetente", function (event) {
+        // A função é chamada quando o evento personalizado 'idDestinatario' é disparado
+        remetenteId = event.detail.userId;
+        console.log("ID do remetende", remetenteId);
+        // Faça o que quiser com o destinatarioId neste script
 
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    if (input.value) {
-      socket.emit('chat message', input.value);
-      input.value = '';
-    }
-  });
-</script>
+        var socket = io("", {
+          transports: ["websocket", "polling", "flashsocket"],
+          auth: {
+            token: remetenteId,
+          },
+        });
+
+        socket.on("novo_recado", (msg) => {
+          console.log(msg);
+        });
+        var form = document.getElementById("form");
+        var input = document.getElementById("input");
+
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (input.value) {
+            socket.emit("recado", {
+              recado: input.value,
+              destinatario: destinatarioId,
+            });
+            input.value = "";
+          }
+        });
+      });
+    </script>
   </body>
 </html>

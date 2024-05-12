@@ -11,14 +11,24 @@ class Usuario {
   bio;
   genero;
   interesses;
+  email;
+  dataInclusao;
+  cpf;
+  imagem;
+  senha;
 
   constructor(usuario) {
-    this.id = usuario.id;
+    this.id = this.id;
     this.nome = usuario.nome;
     this.dataNascimento = new Date(usuario.dataNascimento);
     this.bio = usuario.bio;
     this.genero = usuario.genero;
     this.interesses = usuario.interesses;
+    this.email = usuario.email;
+    this.dataInclusao = usuario.dataInclusao ?? new Date();
+    this.cpf = usuario.cpf;
+    this.imagem = `${usuario.cpf}.jpg`;
+    this.senha = usuario.senha;
   }
 
   getId() {
@@ -62,6 +72,26 @@ class Usuario {
 
   getGenero() {
     return this.genero;
+  }
+
+  getEmail() {
+    return this.email;
+  }
+
+  getCpf() {
+    return this.cpf;
+  }
+
+  getImagem() {
+    return this.imagem;
+  }
+
+  getSenha() {
+    return this.senha;
+  }
+
+  getDataNascimento() {
+    return this.dataNascimento.toISOString().slice(0, 10);
   }
 }
 

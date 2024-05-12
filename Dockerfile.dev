@@ -1,0 +1,24 @@
+# Primeira etapa: etapa de construção
+FROM node:18.12.0-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json ./
+
+
+RUN npm install
+
+
+COPY . .
+
+# Segunda etapa: etapa de execução
+FROM node:18.12.0-alpine
+
+
+WORKDIR /app
+
+COPY --from=build /app ./
+
+EXPOSE ${PORT}
+
+CMD ["npm", "run", "start:dev"]

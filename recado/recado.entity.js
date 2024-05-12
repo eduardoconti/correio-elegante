@@ -17,8 +17,8 @@ class Recado {
     return this.destinatario;
   }
 
-  getConteudo() {
-    return this.conteudo;
+  getRemetente() {
+    return this.remetente;
   }
 }
 

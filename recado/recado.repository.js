@@ -1,29 +1,24 @@
-const { client } = require("../db/mongo-client");
-
 class RecadoRepository {
+  collection;
+
+  constructor(client) {
+    const db = client.db("correio");
+    this.collection = db.collection("recado");
+  }
+
   async save(recado) {
     try {
-      await client.connect();
-      const db = client.db("correio");
-      const collection = db.collection("recado");
-      await collection.insertOne(recado);
+      await this.collection.insertOne(recado);
     } catch (error) {
       console.log(error);
-    } finally {
-      client.close();
     }
   }
 
   async find() {
     try {
-      await client.connect();
-      const db = client.db("correio");
-      const collection = db.collection("recado");
-      return await collection.find().toArray();
+      return await this.collection.find().toArray();
     } catch (error) {
       console.log(error);
-    } finally {
-      client.close();
     }
   }
 }

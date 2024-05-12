@@ -3,7 +3,19 @@ const { MongoClient } = require("mongodb");
 // import { MongoClient } from 'mongodb'
 
 // Connection URL
-const url = "mongodb://localhost:27017";
+const url = "mongodb://mongodb:27017";
 const client = new MongoClient(url);
 
-module.exports = { client };
+async function connectMongo() {
+  try {
+    console.log("Conectado MongoDB");
+    await client.connect({
+      reconnectTries: 60,
+      reconnectInterval: 1000,
+    });
+  } catch (err) {
+    console.log(err.message);
+  }
+}
+
+module.exports = { client, connectMongo };

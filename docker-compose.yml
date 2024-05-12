@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  api:
+    container_name: api
+    restart: on-failure
+    build:
+      context: .
+      dockerfile: ./Dockerfile.dev
+    volumes:
+      - .:/app
+    ports:
+      - ${PORT}:${PORT}
+    env_file:
+      - .env
+    command: npm run start
+    depends_on:
+      - mongodb
+      - postgres
   mongodb:
     container_name: mongodb
     image: mongo:latest
@@ -14,6 +30,27 @@ services:
         limits:
           cpus: '0.1'
           memory: 512M 
+  postgres:
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+    container_name: postgres
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    build:
+      context: .
+      dockerfile: ./Dockerfile.pg
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '0.1'
+          memory: 512M 
 
 volumes:
   mongodb_data:
+  pg-data:
