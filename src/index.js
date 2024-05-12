@@ -9,11 +9,35 @@ const { client, connectMongo } = require("./db/mongo-client");
 const { connectPostgres } = require("./db/pg-client");
 const { validarUsuario } = require("./usuario/usuario.schema");
 const { RequestBodyException } = require("./exceptions/request-body.exception");
+const bodyParser = require("body-parser");
+const multer = require("multer");
+const path = require("path");
+const { Encripter } = require("./infra/encripter");
+
 require("dotenv").config();
 
 const app = express();
 const port = 3000;
-app.use(express.json());
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const interesses = req.body.interesses?.split(",");
+    try {
+      validarUsuario({ ...req.body, interesses });
+      cb(null, req.body.cpf + path.extname(file.originalname));
+    } catch (error) {
+      cb(error);
+    }
+  },
+});
+
+const upload = multer({ storage: storage });
 
 const usuarioRepository = new UsuarioService();
 const recadoRepository = new RecadoRepository(client);
@@ -57,10 +81,12 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
-app.post("/usuario", async (req, res, next) => {
+app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
   try {
-    validarUsuario(req.body);
     const usuario = new Usuario(req.body);
+    const encripter = new Encripter();
+    const senhaEncriptada = await encripter.hash(usuario.senha);
+    usuario.senha = senhaEncriptada;
     await usuarioRepository.save(usuario);
   } catch (err) {
     return next(err);
@@ -74,11 +100,11 @@ app.get("/usuario", async (req, res, next) => {
     res.status(200).send(
       users.map((u) => {
         return {
-          id: u.getId(),
-          nome: u.getNome(),
+          id: u.id,
+          nome: u.nome,
           idade: u.getIdade(),
-          bio: u.getBio(),
-          urlImagem: `${u.getImagem()}`,
+          bio: u.bio,
+          urlImagem: `${u.imagem}`,
         };
       })
     );
@@ -98,10 +124,11 @@ app.get("/recado", async (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
+  console.log(err);
   if (err instanceof RequestBodyException) {
-    res.status(400).send({ detail: err.message });
+    res.status(400).send({ status: 400, detail: err.message });
   } else {
-    res.status(500).send({ detail: "Ocorreu um erro interno!" });
+    res.status(500).send({ status: 500, detail: "Ocorreu um erro interno!" });
   }
 });
 

@@ -17,23 +17,25 @@ class UsuarioService {
         genero,
         email,
         cpf,
-        imagem
+        imagem,
+        senha
       )
     VALUES
       (
-        '${usuario.getNome()}',
+        '${usuario.nome}',
         '${usuario.getDataNascimento()}',
-        '${usuario.getBio()}',
-        '${usuario.getGenero()}',
-        '${usuario.getEmail()}',
-        '${usuario.getCpf()}',
-        '${usuario.getImagem()}'
+        '${usuario.bio ?? null}',
+        '${usuario.genero}',
+        '${usuario.email}',
+        '${usuario.cpf}',
+        '${usuario.imagem}',
+        '${usuario.senha}'
       ) RETURNING id INTO id_usuario;
     
     INSERT INTO
       tb_usuario_interesse (id_usuario, genero)
     VALUES 
-      ${this.buildInteresses(usuario.getInteresses())}
+      ${this.buildInteresses(usuario.interesses)}
     
     end $$`);
   }
@@ -50,7 +52,7 @@ class UsuarioService {
               imagem,
               genero,
               bio
-              from tb_usuario where tb_usuario.id = ${id}`
+              from tb_usuario where tb_usuario.id = '${id}'`
     );
   }
 

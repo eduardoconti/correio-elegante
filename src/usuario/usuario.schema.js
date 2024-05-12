@@ -14,6 +14,7 @@ const usuarioSchema = Joi.object({
     .items(Joi.string().max(1).valid("M", "F", "O").required())
     .required(),
   bio: Joi.string().optional(),
+  imagem: Joi.string().optional(),
 });
 
 const validarUsuario = (usuario) => {

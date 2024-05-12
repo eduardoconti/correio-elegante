@@ -1,24 +1,23 @@
-const generos = {
-  Masculino: "M",
-  Feminino: "F",
-  Outro: "O",
-};
-
+/**
+ * Representa um objeto de usuário.
+ * @class
+ */
 class Usuario {
-  id;
-  nome;
-  dataNascimento;
-  bio;
-  genero;
-  interesses;
-  email;
-  dataInclusao;
-  cpf;
-  imagem;
-  senha;
-
+  /**
+   * Cria uma instância de Usuario.
+   * @param {Object} usuario - Objeto contendo informações do usuário.
+   * @param {string} usuario.nome - O nome do usuário.
+   * @param {string} usuario.dataNascimento - A data de nascimento do usuário no formato 'YYYY-MM-DD'.
+   * @param {string} usuario.bio - A biografia do usuário.
+   * @param {string} usuario.genero - O gênero do usuário ('M', 'F' ou 'O').
+   * @param {string[]} usuario.interesses - Os interesses do usuário.
+   * @param {string} usuario.email - O email do usuário.
+   * @param {Date} [usuario.dataInclusao] - A data de inclusão do usuário (opcional, padrão é a data atual).
+   * @param {string} usuario.cpf - O CPF do usuário.
+   * @param {string} usuario.senha - A senha do usuário.
+   */
   constructor(usuario) {
-    this.id = this.id;
+    this.id = usuario.id;
     this.nome = usuario.nome;
     this.dataNascimento = new Date(usuario.dataNascimento);
     this.bio = usuario.bio;
@@ -31,14 +30,10 @@ class Usuario {
     this.senha = usuario.senha;
   }
 
-  getId() {
-    return this.id;
-  }
-
-  getNome() {
-    return this.nome;
-  }
-
+  /**
+   * Calcula a idade do usuário.
+   * @returns {number} A idade do usuário.
+   */
   getIdade() {
     const dataAtual = new Date();
     const anoAtual = dataAtual.getFullYear();
@@ -62,37 +57,24 @@ class Usuario {
     return idade;
   }
 
-  getBio() {
-    return this.bio;
-  }
-
-  getInteresses() {
-    return this.interesses;
-  }
-
-  getGenero() {
-    return this.genero;
-  }
-
-  getEmail() {
-    return this.email;
-  }
-
-  getCpf() {
-    return this.cpf;
-  }
-
-  getImagem() {
-    return this.imagem;
-  }
-
-  getSenha() {
-    return this.senha;
-  }
-
+  /**
+   * Obtém a data de nascimento do usuário no formato 'YYYY-MM-DD'.
+   * @returns {string} A data de nascimento do usuário no formato 'YYYY-MM-DD'.
+   */
   getDataNascimento() {
     return this.dataNascimento.toISOString().slice(0, 10);
   }
 }
+
+/**
+ * Enumeração dos gêneros.
+ * @readonly
+ * @enum {string}
+ */
+const generos = {
+  Masculino: "M",
+  Feminino: "F",
+  Outro: "O",
+};
 
 module.exports = { Usuario, generos };
