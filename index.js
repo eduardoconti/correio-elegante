@@ -7,6 +7,8 @@ const { RecadoRepository } = require("./recado/recado.repository");
 const { Recado } = require("./recado/recado.entity");
 const { client, connectMongo } = require("./db/mongo-client");
 const { connectPostgres } = require("./db/pg-client");
+const { validarUsuario } = require("./usuario/usuario.schema");
+const { RequestBodyException } = require("./exceptions/request-body.exception");
 require("dotenv").config();
 
 const app = express();
@@ -57,6 +59,7 @@ app.get("/", (req, res) => {
 
 app.post("/usuario", async (req, res, next) => {
   try {
+    validarUsuario(req.body);
     const usuario = new Usuario(req.body);
     await usuarioRepository.save(usuario);
   } catch (err) {
@@ -95,7 +98,11 @@ app.get("/recado", async (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  res.status(500).send("Ocorreu um erro interno!");
+  if (err instanceof RequestBodyException) {
+    res.status(400).send({ detail: err.message });
+  } else {
+    res.status(500).send({ detail: "Ocorreu um erro interno!" });
+  }
 });
 
 server.listen(port, () => {

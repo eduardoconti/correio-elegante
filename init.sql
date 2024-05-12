@@ -10,6 +10,7 @@ CREATE TABLE tb_usuario (
     data_inclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     cpf VARCHAR(14) UNIQUE,
     imagem VARCHAR(128),
+    senha VARCHAR(256) NOT NULL,
     CONSTRAINT pk_tb_atendimento PRIMARY KEY (id)
 );
 
