@@ -22,7 +22,10 @@ CREATE TABLE tb_usuario_interesse (
     genero genero_enum NOT NULL,
     data_inclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_tb_usuario_id FOREIGN KEY(id_usuario) REFERENCES tb_usuario(id)
+    CONSTRAINT uk_tb_usuario_interesse unique(id_usuario, genero);
 );
+
+alter table tb_usuario_interesse add constraint uk_tb_usuario_interesse unique(id_usuario, genero);
 
 CREATE INDEX idx_tb_usuario_interesse_id_usuario on tb_usuario_interesse(id_usuario);
 
