@@ -1,7 +1,7 @@
 const { connectPostgres } = require("../db/pg-client");
 const { Usuario } = require("./usuario.entity");
 
-class UsuarioService {
+class UsuarioRepository {
   async save(usuario) {
     const client = await connectPostgres();
 
@@ -40,10 +40,15 @@ class UsuarioService {
     end $$`);
   }
 
+  /**
+   *
+   * @param {string} id
+   * @returns
+   */
   async findById(id) {
     const client = await connectPostgres();
 
-    return await client.query(
+    const model = await client.query(
       `select id,
               nome,
               email,
@@ -54,6 +59,13 @@ class UsuarioService {
               bio
               from tb_usuario where tb_usuario.id = '${id}'`
     );
+
+    if (!model.rows?.length) {
+      return;
+    }
+
+    const usuario = new Usuario(model.rows[0]);
+    return usuario;
   }
 
   async findAll() {
@@ -73,6 +85,32 @@ class UsuarioService {
     return result.rows.map((usuario) => new Usuario(usuario));
   }
 
+  /**
+   *
+   * @param {string} cpf
+   * @returns
+   */
+  async findByCpfForAuth(cpf) {
+    const client = await connectPostgres();
+
+    const model = await client.query(
+      `select id,
+              nome,
+              email,
+              cpf,
+              genero,
+              senha
+              from tb_usuario where tb_usuario.cpf = '${cpf}'`
+    );
+
+    if (!model.rows?.length) {
+      return;
+    }
+
+    const usuario = new Usuario(model.rows[0]);
+    return usuario;
+  }
+
   buildInteresses(interesses) {
     let values = "";
 
@@ -90,4 +128,6 @@ class UsuarioService {
   }
 }
 
-module.exports = UsuarioService;
+const usuarioRepository = new UsuarioRepository();
+
+module.exports = { usuarioRepository };

@@ -1,5 +1,4 @@
 const express = require("express");
-const UsuarioService = require("./usuario/usuario.repository");
 const { Usuario } = require("./usuario/usuario.entity");
 const { Server } = require("socket.io");
 const http = require("http");
@@ -12,7 +11,15 @@ const { RequestBodyException } = require("./exceptions/request-body.exception");
 const bodyParser = require("body-parser");
 const multer = require("multer");
 const path = require("path");
-const { Encripter } = require("./infra/encripter");
+
+const { validarAuth } = require("./auth/auth.schema");
+const {
+  UnauthorizedException,
+} = require("./exceptions/unauthorized.exception");
+const { encripter } = require("./infra/encripter");
+const { jwtService } = require("./infra/jwt");
+const verificarToken = require("./infra/auth.middleware");
+const { usuarioRepository } = require("./usuario/usuario.repository");
 
 require("dotenv").config();
 
@@ -39,18 +46,27 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-const usuarioRepository = new UsuarioService();
 const recadoRepository = new RecadoRepository(client);
 const server = http.createServer(app);
 const io = new Server(server);
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) {
-    next(new Error("token invalido"));
+    next(new UnauthorizedException("Token nao informado"));
   }
-  socket.id = token;
-  next();
+
+  try {
+    const tokenDecodificado = jwtService.verify(token);
+    const usuario = await usuarioRepository.findById(tokenDecodificado.id);
+    if (!usuario) {
+      next(new UnauthorizedException("Usuario nao encontrado"));
+    }
+    socket.id = usuario.id;
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 io.on("connection", (socket) => {
@@ -84,7 +100,6 @@ app.get("/", (req, res) => {
 app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
   try {
     const usuario = new Usuario(req.body);
-    const encripter = new Encripter();
     const senhaEncriptada = await encripter.hash(usuario.senha);
     usuario.senha = senhaEncriptada;
     await usuarioRepository.save(usuario);
@@ -113,7 +128,7 @@ app.get("/usuario", async (req, res, next) => {
   }
 });
 
-app.get("/recado", async (req, res, next) => {
+app.get("/recado", verificarToken, async (req, res, next) => {
   try {
     const recados = await recadoRepository.find();
 
@@ -123,13 +138,52 @@ app.get("/recado", async (req, res, next) => {
   }
 });
 
+app.post(
+  "/auth",
+  (req, res, next) => {
+    try {
+      validarAuth(req.body);
+      next();
+    } catch (err) {
+      next(err);
+    }
+  },
+  async (req, res, next) => {
+    const authRequest = req.body;
+    try {
+      const user = await usuarioRepository.findByCpfForAuth(authRequest.login);
+      if (!user) {
+        throw new UnauthorizedException("Credenciais invalidas");
+      }
+
+      if (!(await encripter.compare(authRequest.senha, user.senha))) {
+        throw new UnauthorizedException("Credenciais invalidas");
+      }
+
+      const payload = {
+        id: user.id,
+        nome: user.nome,
+        imagem: user.imagem,
+      };
+
+      const token = jwtService.sign(payload);
+      res.status(201).send({ token });
+    } catch (err) {
+      return next(err);
+    }
+  }
+);
+
 app.use((err, req, res, next) => {
   console.log(err);
   if (err instanceof RequestBodyException) {
-    res.status(400).send({ status: 400, detail: err.message });
-  } else {
-    res.status(500).send({ status: 500, detail: "Ocorreu um erro interno!" });
+    return res.status(400).send({ status: 400, detail: err.message });
   }
+
+  if (err instanceof UnauthorizedException) {
+    return res.status(401).send({ status: 401, detail: err.message });
+  }
+  res.status(500).send({ status: 500, detail: "Ocorreu um erro interno!" });
 });
 
 server.listen(port, () => {

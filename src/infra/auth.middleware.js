@@ -1,0 +1,30 @@
+const { usuarioRepository } = require("../usuario/usuario.repository");
+const { jwtService } = require("./jwt");
+
+async function authMiddleware(req, res, next) {
+  const headerToken = req.headers["authorization"];
+
+  if (!headerToken) {
+    return res.status(401).json({ status: 401, detail: "Token nao fornecido" });
+  }
+
+  const token = headerToken.split(" ")[1];
+
+  try {
+    const tokenDecodificado = jwtService.verify(token);
+    const usuario = await usuarioRepository.findById(tokenDecodificado.id);
+
+    if (!usuario) {
+      return res
+        .status(401)
+        .json({ status: 401, detail: "Usuario nao encontrado" });
+    }
+
+    req.usuario = usuario;
+    next();
+  } catch (err) {
+    return res.status(403).json({ status: 401, detail: "Token invalido" });
+  }
+}
+
+module.exports = authMiddleware;

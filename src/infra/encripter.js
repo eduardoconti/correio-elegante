@@ -2,13 +2,15 @@ const bcrypt = require("bcryptjs");
 
 class Encripter {
   async hash(senha) {
-    try {
-      const salt = 10;
-      return bcrypt.hash(senha, salt);
-    } catch (error) {
-      console.log(error);
-    }
+    const salt = 10;
+    return bcrypt.hash(senha, salt);
+  }
+
+  async compare(senha, hash) {
+    return await bcrypt.compare(senha, hash);
   }
 }
 
-module.exports = { Encripter };
+const encripter = new Encripter();
+
+module.exports = { encripter };
