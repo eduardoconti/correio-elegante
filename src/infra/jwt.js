@@ -15,4 +15,4 @@ class JWTService {
 
 const jwtService = new JWTService();
 
-module.exports = { jwtService };
+module.exports = { jwtService, JWTService };

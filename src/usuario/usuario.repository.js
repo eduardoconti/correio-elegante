@@ -1,7 +1,10 @@
-const { connectPostgres } = require("../db/pg-client");
+const { connectPostgres } = require("../infra/db/pg-client");
 const { Usuario } = require("./usuario.entity");
 
 class UsuarioRepository {
+  /**
+   * @param {Usuario} usuario
+   */
   async save(usuario) {
     const client = await connectPostgres();
 
@@ -42,8 +45,8 @@ class UsuarioRepository {
 
   /**
    *
-   * @param {string} id
-   * @returns
+   * @param {string} id id do usuario
+   * @returns {Promise<Usuario | undefined>}
    */
   async findById(id) {
     const client = await connectPostgres();
@@ -68,6 +71,10 @@ class UsuarioRepository {
     return usuario;
   }
 
+  /**
+   *
+   * @returns {Promise<Usuario[] | undefined>}
+   */
   async findAll() {
     const client = await connectPostgres();
     const result = await client.query(
@@ -82,13 +89,17 @@ class UsuarioRepository {
               from tb_usuario`
     );
 
+    if (!result.rows.length) {
+      return;
+    }
+
     return result.rows.map((usuario) => new Usuario(usuario));
   }
 
   /**
    *
-   * @param {string} cpf
-   * @returns
+   * @param {string} cpf cpf do usuario
+   * @returns {Promise<Usuario | undefined>}
    */
   async findByCpfForAuth(cpf) {
     const client = await connectPostgres();
@@ -111,6 +122,12 @@ class UsuarioRepository {
     return usuario;
   }
 
+  /**
+   *
+   * @private
+   * @param {string[]} interesses
+   * @returns
+   */
   buildInteresses(interesses) {
     let values = "";
 

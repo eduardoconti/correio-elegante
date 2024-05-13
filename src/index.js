@@ -1,11 +1,10 @@
 const express = require("express");
-const { Usuario } = require("./usuario/usuario.entity");
 const { Server } = require("socket.io");
 const http = require("http");
 const { RecadoRepository } = require("./recado/recado.repository");
 const { Recado } = require("./recado/recado.entity");
-const { client, connectMongo } = require("./db/mongo-client");
-const { connectPostgres } = require("./db/pg-client");
+const { client, connectMongo } = require("./infra/db/mongo-client");
+const { connectPostgres } = require("./infra/db/pg-client");
 const { validarUsuario } = require("./usuario/usuario.schema");
 const { RequestBodyException } = require("./exceptions/request-body.exception");
 const bodyParser = require("body-parser");
@@ -23,8 +22,11 @@ const { usuarioRepository } = require("./usuario/usuario.repository");
 const {
   cadastrarUsuarioUseCase,
 } = require("./usuario/cadastrar-usuario.usecase");
+const { authUseCase } = require("./auth/auth.usecase");
+const { validarEnv } = require("./infra/env.schema");
 
 require("dotenv").config();
+validarEnv(process.env);
 
 const app = express();
 const port = 3000;
@@ -138,41 +140,15 @@ app.get("/recado", verificarToken, async (req, res, next) => {
   }
 });
 
-app.post(
-  "/auth",
-  (req, res, next) => {
-    try {
-      validarAuth(req.body);
-      next();
-    } catch (err) {
-      next(err);
-    }
-  },
-  async (req, res, next) => {
-    const authRequest = req.body;
-    try {
-      const user = await usuarioRepository.findByCpfForAuth(authRequest.login);
-      if (!user) {
-        throw new UnauthorizedException("Credenciais invalidas");
-      }
-
-      if (!(await encripter.compare(authRequest.senha, user.senha))) {
-        throw new UnauthorizedException("Credenciais invalidas");
-      }
-
-      const payload = {
-        id: user.id,
-        nome: user.nome,
-        imagem: user.imagem,
-      };
-
-      const token = jwtService.sign(payload);
-      res.status(201).send({ token });
-    } catch (err) {
-      return next(err);
-    }
+app.post("/auth", async (req, res, next) => {
+  try {
+    validarAuth(req.body);
+    const token = await authUseCase.execute(req.body);
+    res.status(201).send({ token });
+  } catch (err) {
+    return next(err);
   }
-);
+});
 
 app.use((err, req, res, next) => {
   console.log(err);
