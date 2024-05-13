@@ -130,4 +130,4 @@ class UsuarioRepository {
 
 const usuarioRepository = new UsuarioRepository();
 
-module.exports = { usuarioRepository };
+module.exports = { usuarioRepository, UsuarioRepository };

@@ -13,4 +13,4 @@ class Encripter {
 
 const encripter = new Encripter();
 
-module.exports = { encripter };
+module.exports = { encripter, Encripter };

@@ -20,6 +20,9 @@ const { encripter } = require("./infra/encripter");
 const { jwtService } = require("./infra/jwt");
 const verificarToken = require("./infra/auth.middleware");
 const { usuarioRepository } = require("./usuario/usuario.repository");
+const {
+  cadastrarUsuarioUseCase,
+} = require("./usuario/cadastrar-usuario.usecase");
 
 require("dotenv").config();
 
@@ -99,10 +102,7 @@ app.get("/", (req, res) => {
 
 app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
   try {
-    const usuario = new Usuario(req.body);
-    const senhaEncriptada = await encripter.hash(usuario.senha);
-    usuario.senha = senhaEncriptada;
-    await usuarioRepository.save(usuario);
+    await cadastrarUsuarioUseCase.execute(req.body);
   } catch (err) {
     return next(err);
   }
