@@ -26,7 +26,7 @@ class Usuario {
     this.email = usuario.email;
     this.dataInclusao = usuario.dataInclusao ?? new Date();
     this.cpf = usuario.cpf;
-    this.imagem = `${usuario.cpf}.jpg`;
+    this.imagem = usuario.imagem;
     this.senha = usuario.senha;
   }
 

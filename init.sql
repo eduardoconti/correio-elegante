@@ -21,13 +21,24 @@ CREATE TABLE tb_usuario_interesse (
     id_usuario uuid NOT NULL,
     genero genero_enum NOT NULL,
     data_inclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_tb_usuario_id FOREIGN KEY(id_usuario) REFERENCES tb_usuario(id)
+    CONSTRAINT fk_id_usuario FOREIGN KEY(id_usuario) REFERENCES tb_usuario(id)
     CONSTRAINT uk_tb_usuario_interesse unique(id_usuario, genero);
 );
 
-alter table tb_usuario_interesse add constraint uk_tb_usuario_interesse unique(id_usuario, genero);
 
 CREATE INDEX idx_tb_usuario_interesse_id_usuario on tb_usuario_interesse(id_usuario);
+
+CREATE TABLE tb_apresentacao (
+    id SERIAL PRIMARY KEY,
+    id_usuario uuid NOT NULL,
+    id_usuario_apresentado uuid NOT NULL,
+    data_inclusao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    interessado BOOLEAN NOT NULL,
+    CONSTRAINT fk_id_usuario FOREIGN KEY(id_usuario) REFERENCES tb_usuario(id)
+    CONSTRAINT fk_id_usuario_apresentado FOREIGN KEY(id_usuario_apresentado) REFERENCES tb_usuario(id)
+    CONSTRAINT uk_tb_apresentacao unique(id_usuario, id_usuario_apresentado);
+);
+
 
 
 

@@ -4,6 +4,7 @@ const {
 const { encripter } = require("../infra/encripter");
 const { jwtService } = require("../infra/jwt");
 const { usuarioRepository } = require("../usuario/usuario.repository");
+const { getUrlImagem } = require("../usuario/utils");
 
 class AuthUseCase {
   /**
@@ -30,8 +31,8 @@ class AuthUseCase {
 
     const payload = {
       id: user.id,
-      nome: user.nome,
-      imagem: user.imagem,
+      name: user.nome,
+      image_url: getUrlImagem(user.imagem),
     };
 
     return this.jwtService.sign(payload);

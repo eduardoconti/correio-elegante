@@ -13,6 +13,7 @@ describe("Usuario", () => {
       nome: "Eduardo",
       senha: "teste@123",
       interesses: ["F"],
+      imagem: "10254015905.jpg",
     });
   });
 

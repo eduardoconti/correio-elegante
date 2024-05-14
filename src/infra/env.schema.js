@@ -5,6 +5,7 @@ const envSchema = Joi.object({
   DATABASE_PASSWORD: Joi.string().required(),
   CONNECTION_STRING: Joi.string().required(),
   PORT: Joi.number().required(),
+  API_HOST: Joi.string().required(),
 });
 
 const validarEnv = (usuario) => {

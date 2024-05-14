@@ -122,6 +122,36 @@ class UsuarioRepository {
     return usuario;
   }
 
+  async findUsuariosApresentar(idUsuario, limit) {
+    const client = await connectPostgres();
+    const result = await client.query(
+      `SELECT 
+      tu.id,
+      tu.nome,
+      tu.cpf,
+      tu.data_nascimento AS "dataNascimento",
+      tu.imagem,
+      tu.genero,
+      tu.bio
+  FROM 
+      tb_usuario tu
+  INNER JOIN 
+      tb_usuario_interesse tui ON tu.genero = tui.genero
+  LEFT JOIN 
+      tb_apresentacao ta ON tu.id = ta.id_usuario_apresentado AND ta.id_usuario = '${idUsuario}'
+  WHERE 
+      tui.id_usuario = '${idUsuario}'
+      AND ta.id_usuario_apresentado IS NULL
+  LIMIT ${limit}`
+    );
+
+    if (!result.rows.length) {
+      return;
+    }
+
+    return result.rows.map((usuario) => new Usuario(usuario));
+  }
+
   /**
    *
    * @private

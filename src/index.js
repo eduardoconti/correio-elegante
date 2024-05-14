@@ -9,13 +9,11 @@ const { validarUsuario } = require("./usuario/usuario.schema");
 const { RequestBodyException } = require("./exceptions/request-body.exception");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-const path = require("path");
-
 const { validarAuth } = require("./auth/auth.schema");
 const {
   UnauthorizedException,
 } = require("./exceptions/unauthorized.exception");
-const { encripter } = require("./infra/encripter");
+const path = require("path");
 const { jwtService } = require("./infra/jwt");
 const verificarToken = require("./infra/auth.middleware");
 const { usuarioRepository } = require("./usuario/usuario.repository");
@@ -24,7 +22,9 @@ const {
 } = require("./usuario/cadastrar-usuario.usecase");
 const { authUseCase } = require("./auth/auth.usecase");
 const { validarEnv } = require("./infra/env.schema");
-
+const { randomUUID } = require("crypto");
+const { getUrlImagem } = require("./usuario/utils");
+const fs = require("fs");
 require("dotenv").config();
 validarEnv(process.env);
 
@@ -36,13 +36,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/");
+    cb(null, path.join(__dirname, "../uploads/"));
   },
   filename: function (req, file, cb) {
     const interesses = req.body.interesses?.split(",");
     try {
+      const extName = path.extname(file.originalname);
+      const imageName = randomUUID() + extName;
+      req.body.imagem = imageName;
       validarUsuario({ ...req.body, interesses });
-      cb(null, req.body.cpf + path.extname(file.originalname));
+      cb(null, imageName);
     } catch (error) {
       cb(error);
     }
@@ -106,7 +109,18 @@ app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
   try {
     await cadastrarUsuarioUseCase.execute(req.body);
   } catch (err) {
-    return next(err);
+    if (req.file) {
+      const imagePath = path.join(__dirname, `../uploads/${req.body.imagem}`);
+      fs.unlink(imagePath, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error("Erro ao remover a imagem:", unlinkErr);
+        } else {
+          console.log("Imagem removida com sucesso");
+        }
+      });
+
+      return next(err);
+    }
   }
   res.status(204).send();
 });
@@ -118,10 +132,10 @@ app.get("/usuario", async (req, res, next) => {
       users.map((u) => {
         return {
           id: u.id,
-          nome: u.nome,
-          idade: u.getIdade(),
+          name: u.nome,
+          age: u.getIdade(),
           bio: u.bio,
-          urlImagem: `${u.imagem}`,
+          image_url: getUrlImagem(u.imagem),
         };
       })
     );
@@ -150,6 +164,7 @@ app.post("/auth", async (req, res, next) => {
   }
 });
 
+app.use("/user-image", express.static(path.join(__dirname, "../uploads")));
 app.use((err, req, res, next) => {
   console.log(err);
   if (err instanceof RequestBodyException) {
