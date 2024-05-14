@@ -134,6 +134,25 @@ class UsuarioRepository {
 
   /**
    *
+   * @param {string} id id do usuario
+   * @returns {Promise<boolean>}
+   */
+  async exists(id) {
+    const client = connectPostgres;
+
+    const model = await client.query(
+      `select id
+                from tb_usuario where tb_usuario.id = '${id}'`
+    );
+
+    if (!model.rows?.length) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   *
    * @private
    * @param {string[]} interesses
    * @returns

@@ -33,6 +33,10 @@ validarSchema(process.env, envSchema, {
   stripUnknown: true,
 });
 const apm = require("elastic-apm-node/start");
+const {
+  avaliarUsuarioUseCase,
+} = require("./apresentacao/avaliar-usuario.usecase");
+const { apresentacaoSchema } = require("./apresentacao/apresentacao.schema");
 
 const app = express();
 const port = 3000;
@@ -151,6 +155,7 @@ app.get("/usuario/apresentar", verificarToken, async (req, res, next) => {
           name: u.nome,
           age: u.getIdade(),
           bio: u.bio,
+          genero: u.genero,
           image_url: getUrlImagem(u.imagem),
         };
       })
@@ -175,6 +180,18 @@ app.post("/auth", async (req, res, next) => {
     validarAuth(req.body);
     const token = await authUseCase.execute(req.body);
     res.status(201).send({ token });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.post("/apresentacao", verificarToken, async (req, res, next) => {
+  try {
+    const apresentacao = { ...req.body, idUsuario: req.usuario.id };
+    validarSchema(apresentacao, apresentacaoSchema);
+    await avaliarUsuarioUseCase.executar(apresentacao);
+
+    res.status(204).send();
   } catch (err) {
     return next(err);
   }

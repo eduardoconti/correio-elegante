@@ -1,3 +1,5 @@
+const { isEmpty } = require("../utils/utils");
+
 /**
  * Representa um objeto de usuário.
  * @class
@@ -8,7 +10,7 @@ class Usuario {
    * @param {Object} usuario - Objeto contendo informações do usuário.
    * @param {string} usuario.nome - O nome do usuário.
    * @param {string} usuario.dataNascimento - A data de nascimento do usuário no formato 'YYYY-MM-DD'.
-   * @param {string} usuario.bio - A biografia do usuário.
+   * @param {string | undefined} usuario.bio - A biografia do usuário.
    * @param {string} usuario.genero - O gênero do usuário ('M', 'F' ou 'O').
    * @param {string[]} usuario.interesses - Os interesses do usuário.
    * @param {string} usuario.email - O email do usuário.
@@ -20,7 +22,7 @@ class Usuario {
     this.id = usuario.id;
     this.nome = usuario.nome;
     this.dataNascimento = new Date(usuario.dataNascimento);
-    this.bio = usuario.bio;
+    this.bio = isEmpty(usuario.bio) ? undefined : usuario.bio;
     this.genero = usuario.genero;
     this.interesses = usuario.interesses;
     this.email = usuario.email;
