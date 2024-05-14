@@ -1,0 +1,35 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 1000
+      name: ramp up
+    - duration: 60
+      arrivalRate: 1000
+      name: sustain
+  plugins:
+    ensure: {}
+    apdex: {}
+    metrics-by-endpoint: {}
+  apdex:
+    threshold: 200
+  ensure:
+    thresholds:
+      - http.response_time.p99: 200
+      - http.response_time.p95: 175
+      - http.response_time.p90: 120
+scenarios:
+  - flow:
+      - get:
+          url: "/usuario/apresentar"
+          qs:
+            limit: 10
+          headers:
+            authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijg5MjMzOThjLTMzZmYtNDliNS05YzJiLTRhODhiODc5ZWMyMCIsIm5hbWUiOiJUZXN0ZSBwbmciLCJpbWFnZV91cmwiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAvdXNlci1pbWFnZS91bmRlZmluZWQiLCJpYXQiOjE3MTU2ODMxNDEsImV4cCI6MTcxNjI4Nzk0MX0.CGn-fV968J0wLuAsf1MQGjMS6SK46ifLu8g1GHASI-M"
+      - get:
+          url: "/recado"
+          headers:
+            authorization: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijg5MjMzOThjLTMzZmYtNDliNS05YzJiLTRhODhiODc5ZWMyMCIsIm5hbWUiOiJUZXN0ZSBwbmciLCJpbWFnZV91cmwiOiJodHRwOi8vbG9jYWxob3N0OjMwMDAvdXNlci1pbWFnZS91bmRlZmluZWQiLCJpYXQiOjE3MTU2ODMxNDEsImV4cCI6MTcxNjI4Nzk0MX0.CGn-fV968J0wLuAsf1MQGjMS6SK46ifLu8g1GHASI-M"
+      - get:
+          url: "/user-image/5d6892ce-b9f2-4d81-8f08-e7d939375640.png"

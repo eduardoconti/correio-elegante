@@ -32,6 +32,7 @@ require("dotenv").config();
 validarSchema(process.env, envSchema, {
   stripUnknown: true,
 });
+const apm = require("elastic-apm-node/start");
 
 const app = express();
 const port = 3000;
