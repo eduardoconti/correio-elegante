@@ -4,8 +4,7 @@ const http = require("http");
 const { RecadoRepository } = require("./recado/recado.repository");
 const { Recado } = require("./recado/recado.entity");
 const { client, connectMongo } = require("./infra/db/mongo-client");
-const { connectPostgres } = require("./infra/db/pg-client");
-const { validarUsuario } = require("./usuario/usuario.schema");
+const { usuarioSchema } = require("./usuario/usuario.schema");
 const { RequestBodyException } = require("./exceptions/request-body.exception");
 const bodyParser = require("body-parser");
 const multer = require("multer");
@@ -21,12 +20,18 @@ const {
   cadastrarUsuarioUseCase,
 } = require("./usuario/cadastrar-usuario.usecase");
 const { authUseCase } = require("./auth/auth.usecase");
-const { validarEnv } = require("./infra/env.schema");
+const { envSchema } = require("./infra/env.schema");
 const { randomUUID } = require("crypto");
 const { getUrlImagem } = require("./usuario/utils");
 const fs = require("fs");
+const { validarSchema } = require("./infra/validar-schema");
+const {
+  aprensetarUsuarioSchema,
+} = require("./usuario/apresentar-usuario.schema");
 require("dotenv").config();
-validarEnv(process.env);
+validarSchema(process.env, envSchema, {
+  stripUnknown: true,
+});
 
 const app = express();
 const port = 3000;
@@ -44,7 +49,7 @@ const storage = multer.diskStorage({
       const extName = path.extname(file.originalname);
       const imageName = randomUUID() + extName;
       req.body.imagem = imageName;
-      validarUsuario({ ...req.body, interesses });
+      validarSchema({ ...req.body, interesses }, usuarioSchema);
       cb(null, imageName);
     } catch (error) {
       cb(error);
@@ -125,9 +130,19 @@ app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
   res.status(204).send();
 });
 
-app.get("/usuario", async (req, res, next) => {
+app.get("/usuario/apresentar", verificarToken, async (req, res, next) => {
   try {
-    const users = await usuarioRepository.findAll();
+    validarSchema(req.query, aprensetarUsuarioSchema);
+
+    const users = await usuarioRepository.findUsuariosApresentar(
+      req.usuario.id,
+      req.query.limit ?? 1
+    );
+
+    if (!users?.length) {
+      return res.status(204).send();
+    }
+
     res.status(200).send(
       users.map((u) => {
         return {
@@ -182,4 +197,3 @@ server.listen(port, () => {
 });
 
 connectMongo();
-connectPostgres();

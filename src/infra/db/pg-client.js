@@ -1,22 +1,42 @@
-async function connectPostgres() {
-  if (global.connection) return global.connection.connect();
+const { Pool } = require("pg");
 
-  const { Pool } = require("pg");
-  const pool = new Pool({
-    connectionString: process.env.CONNECTION_STRING,
-  });
+class Singleton {
+  constructor(connectionString) {
+    if (!Singleton.instances) {
+      Singleton.instances = {};
+    }
+    if (!Singleton.instances[connectionString]) {
+      const pool = this.createPool(connectionString);
+      Singleton.instances[connectionString] = pool;
+    }
+  }
 
-  //apenas testando a conexão
-  const client = await pool.connect();
-  console.log("Criou pool de conexões no PostgreSQL!");
+  getInstance(connectionString) {
+    return Singleton.instances[connectionString];
+  }
 
-  const res = await client.query("SELECT NOW()");
-  console.log(res.rows[0]);
-  client.release();
+  createPool(connectionString) {
+    const pool = new Pool({ connectionString });
 
-  //guardando para usar sempre o mesmo
-  global.connection = pool;
-  return pool.connect();
+    pool.on("error", (err, client) => {
+      console.error("Unexpected error on idle client");
+      setTimeout(() => {
+        console.log("Attempting to reconnect...: ");
+        Singleton.instances[connectionString] =
+          this.createPool(connectionString);
+      }, 5000);
+    });
+
+    pool.on("connect", () => {
+      console.log("Connectado postgres");
+    });
+
+    return pool;
+  }
 }
+
+const connectPostgres = new Singleton(
+  process.env.CONNECTION_STRING
+).getInstance(process.env.CONNECTION_STRING);
 
 module.exports = { connectPostgres };

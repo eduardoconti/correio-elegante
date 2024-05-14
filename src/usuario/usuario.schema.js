@@ -1,7 +1,4 @@
 const Joi = require("joi");
-const {
-  RequestBodyException,
-} = require("../exceptions/request-body.exception");
 
 const usuarioSchema = Joi.object({
   nome: Joi.string().required(),
@@ -17,19 +14,4 @@ const usuarioSchema = Joi.object({
   imagem: Joi.string().required(),
 });
 
-const validarUsuario = (usuario) => {
-  const result = usuarioSchema.validate(usuario);
-
-  if (result.error) {
-    let errorMessage = "";
-
-    result.error.details.forEach((e) => {
-      errorMessage = e.message;
-    });
-    throw new RequestBodyException(errorMessage);
-  }
-
-  return;
-};
-
-module.exports = { validarUsuario };
+module.exports = { usuarioSchema };

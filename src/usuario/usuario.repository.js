@@ -6,7 +6,7 @@ class UsuarioRepository {
    * @param {Usuario} usuario
    */
   async save(usuario) {
-    const client = await connectPostgres();
+    const client = connectPostgres;
 
     await client.query(`
     do $$ declare id_usuario UUID;
@@ -49,7 +49,7 @@ class UsuarioRepository {
    * @returns {Promise<Usuario | undefined>}
    */
   async findById(id) {
-    const client = await connectPostgres();
+    const client = connectPostgres;
 
     const model = await client.query(
       `select id,
@@ -73,36 +73,11 @@ class UsuarioRepository {
 
   /**
    *
-   * @returns {Promise<Usuario[] | undefined>}
-   */
-  async findAll() {
-    const client = await connectPostgres();
-    const result = await client.query(
-      `select id,
-              nome,
-              email,
-              cpf,
-              data_nascimento as "dataNascimento",
-              imagem,
-              genero,
-              bio
-              from tb_usuario`
-    );
-
-    if (!result.rows.length) {
-      return;
-    }
-
-    return result.rows.map((usuario) => new Usuario(usuario));
-  }
-
-  /**
-   *
    * @param {string} cpf cpf do usuario
    * @returns {Promise<Usuario | undefined>}
    */
   async findByCpfForAuth(cpf) {
-    const client = await connectPostgres();
+    const client = connectPostgres;
 
     const model = await client.query(
       `select id,
@@ -121,9 +96,14 @@ class UsuarioRepository {
     const usuario = new Usuario(model.rows[0]);
     return usuario;
   }
-
+  /**
+   *
+   * @param {string} idUsuario
+   * @param {number} limit
+   * @returns {Promise<Usuario[]>}
+   */
   async findUsuariosApresentar(idUsuario, limit) {
-    const client = await connectPostgres();
+    const client = connectPostgres;
     const result = await client.query(
       `SELECT 
       tu.id,

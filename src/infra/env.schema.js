@@ -8,22 +8,4 @@ const envSchema = Joi.object({
   API_HOST: Joi.string().required(),
 });
 
-const validarEnv = (usuario) => {
-  const result = envSchema.validate(usuario, {
-    allowUnknown: false,
-    stripUnknown: true,
-  });
-
-  if (result.error) {
-    let errorMessage = "";
-
-    result.error.details.forEach((e) => {
-      errorMessage = e.message;
-    });
-    throw new Error(errorMessage);
-  }
-
-  return;
-};
-
-module.exports = { validarEnv };
+module.exports = { envSchema };
