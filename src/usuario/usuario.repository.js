@@ -1,5 +1,6 @@
 const { connectPostgres } = require("../infra/db/pg-client");
 const { Usuario } = require("./usuario.entity");
+const { getUrlImagem } = require("./utils");
 
 class UsuarioRepository {
   /**
@@ -129,7 +130,17 @@ class UsuarioRepository {
       return;
     }
 
-    return result.rows.map((usuario) => new Usuario(usuario));
+    return result.rows.map((usuario) => {
+      const entity = new Usuario(usuario);
+      return {
+        id: entity.id,
+        name: entity.nome,
+        age: entity.getIdade(),
+        bio: entity.bio,
+        genero: entity.genero,
+        image_url: getUrlImagem(entity.imagem),
+      };
+    });
   }
 
   /**

@@ -22,7 +22,6 @@ const {
 const { authUseCase } = require("./auth/auth.usecase");
 const { envSchema } = require("./infra/env.schema");
 const { randomUUID } = require("crypto");
-const { getUrlImagem } = require("./usuario/utils");
 const fs = require("fs");
 const { validarSchema } = require("./infra/validar-schema");
 const {
@@ -32,11 +31,15 @@ require("dotenv").config();
 validarSchema(process.env, envSchema, {
   stripUnknown: true,
 });
-const apm = require("elastic-apm-node/start");
+require("elastic-apm-node").start();
 const {
   avaliarUsuarioUseCase,
 } = require("./apresentacao/avaliar-usuario.usecase");
 const { apresentacaoSchema } = require("./apresentacao/apresentacao.schema");
+const { matchSchema } = require("./apresentacao/match.schema");
+const {
+  apresentacaoRepository,
+} = require("./apresentacao/apresentacao.repository");
 
 const app = express();
 const port = 3000;
@@ -137,29 +140,19 @@ app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
 
 app.get("/usuario/apresentar", verificarToken, async (req, res, next) => {
   try {
-    validarSchema(req.query, aprensetarUsuarioSchema);
+    const input = { ...req.query, idUsuario: req.usuario.id };
+    validarSchema(input, aprensetarUsuarioSchema);
 
     const users = await usuarioRepository.findUsuariosApresentar(
-      req.usuario.id,
-      req.query.limit ?? 1
+      input.idUsuario,
+      input.limit ?? 1
     );
 
     if (!users?.length) {
       return res.status(204).send();
     }
 
-    res.status(200).send(
-      users.map((u) => {
-        return {
-          id: u.id,
-          name: u.nome,
-          age: u.getIdade(),
-          bio: u.bio,
-          genero: u.genero,
-          image_url: getUrlImagem(u.imagem),
-        };
-      })
-    );
+    res.status(200).send(users);
   } catch (err) {
     return next(err);
   }
@@ -192,6 +185,18 @@ app.post("/apresentacao", verificarToken, async (req, res, next) => {
     await avaliarUsuarioUseCase.executar(apresentacao);
 
     res.status(204).send();
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.get("/apresentacao/match", verificarToken, async (req, res, next) => {
+  try {
+    const input = { ...req.query, idUsuario: req.usuario.id };
+    validarSchema(input, matchSchema);
+    const usuarios = await apresentacaoRepository.listMatch(input);
+
+    res.status(200).send(usuarios);
   } catch (err) {
     return next(err);
   }

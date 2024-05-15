@@ -27,6 +27,7 @@ describe("CadastrarUsuarioUseCase", () => {
       nome: "Eduardo",
       senha: "teste@123",
       interesses: ["F"],
+      imagem: "123.jpg",
     };
     await useCase.execute(usuarioMock);
 
@@ -35,7 +36,7 @@ describe("CadastrarUsuarioUseCase", () => {
       ...usuarioMock,
       senha: "encripted",
       dataInclusao: expect.any(Date),
-      imagem: "10254015905.jpg",
+      imagem: "123.jpg",
       id: undefined,
     });
   });

@@ -20,6 +20,7 @@ const usuario = new Usuario({
   nome: "Eduardo",
   senha: "teste@123",
   interesses: ["F"],
+  imagem: "123.jpg",
 });
 
 describe("AuthUseCase", () => {
@@ -48,8 +49,8 @@ describe("AuthUseCase", () => {
     expect(repositoryStub.findByCpfForAuth).toBeCalledWith(authDto.login);
     expect(jwtService.sign).toBeCalledWith({
       id: usuario.id,
-      nome: usuario.nome,
-      imagem: usuario.imagem,
+      name: usuario.nome,
+      image_url: "undefined/user-image/123.jpg",
     });
   });
 
