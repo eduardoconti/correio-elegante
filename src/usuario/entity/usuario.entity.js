@@ -1,4 +1,4 @@
-const { isEmpty } = require("../utils/utils");
+const { isEmpty } = require("../../utils/utils");
 
 /**
  * Representa um objeto de usuário.

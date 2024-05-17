@@ -11,7 +11,7 @@ CREATE TABLE tb_usuario (
     cpf VARCHAR(14) UNIQUE,
     imagem VARCHAR(128),
     senha VARCHAR(256) NOT NULL,
-    CONSTRAINT pk_tb_atendimento PRIMARY KEY (id)
+    CONSTRAINT pk_tb_usuario PRIMARY KEY (id)
 );
 
 CREATE INDEX idx_tb_usuario_genero on tb_usuario(genero);

@@ -4,29 +4,31 @@ const http = require("http");
 const { RecadoRepository } = require("./recado/recado.repository");
 const { Recado } = require("./recado/recado.entity");
 const { client, connectMongo } = require("./infra/db/mongo-client");
-const { usuarioSchema } = require("./usuario/usuario.schema");
+const { usuarioSchema } = require("./usuario/dto/cadastrar-usuario.schema");
 const { RequestBodyException } = require("./exceptions/request-body.exception");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-const { validarAuth } = require("./auth/auth.schema");
+const { validarAuth, authSchema } = require("./auth/auth.schema");
 const {
   UnauthorizedException,
 } = require("./exceptions/unauthorized.exception");
 const path = require("path");
 const { jwtService } = require("./infra/jwt");
 const verificarToken = require("./infra/auth.middleware");
-const { usuarioRepository } = require("./usuario/usuario.repository");
+const {
+  usuarioRepository,
+} = require("./usuario/repository/usuario.repository");
 const {
   cadastrarUsuarioUseCase,
-} = require("./usuario/cadastrar-usuario.usecase");
-const { authUseCase } = require("./auth/auth.usecase");
+} = require("./usuario/usecase/cadastrar-usuario.usecase");
+const { authUseCase } = require("./auth/usecase/auth.usecase");
 const { envSchema } = require("./infra/env.schema");
 const { randomUUID } = require("crypto");
 const fs = require("fs");
 const { validarSchema } = require("./infra/validar-schema");
 const {
   aprensetarUsuarioSchema,
-} = require("./usuario/apresentar-usuario.schema");
+} = require("./apresentacao/dto/apresentar-usuario.schema");
 require("dotenv").config();
 validarSchema(process.env, envSchema, {
   stripUnknown: true,
@@ -34,30 +36,41 @@ validarSchema(process.env, envSchema, {
 require("elastic-apm-node").start();
 const {
   avaliarUsuarioUseCase,
-} = require("./apresentacao/avaliar-usuario.usecase");
-const { apresentacaoSchema } = require("./apresentacao/apresentacao.schema");
-const { matchSchema } = require("./apresentacao/match.schema");
+} = require("./apresentacao/usecase/avaliar-usuario-apresentado.usecase");
+const {
+  apresentacaoSchema,
+} = require("./apresentacao/dto/avaliar-usuario-apresentado.schema");
+const { matchSchema } = require("./apresentacao/dto/match.schema");
 const {
   apresentacaoRepository,
-} = require("./apresentacao/apresentacao.repository");
+} = require("./apresentacao/repository/apresentacao.repository");
+const {
+  CadastrarUsuarioRequest,
+} = require("./usuario/dto/cadastrar-usuario.dto");
+const {
+  AvaliarUsuarioApresentadoRequest,
+} = require("./apresentacao/dto/avaliar-usuario-apresentado.dto");
+const {
+  ApresentarUsuarioRequest,
+} = require("./apresentacao/dto/apresentar-usuario.dto");
+const { ErrorResponse } = require("./infra/error-response");
 
 const app = express();
 const port = 3000;
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use("/user-image", express.static(path.join(__dirname, "../uploads")));
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, path.join(__dirname, "../uploads/"));
   },
   filename: function (req, file, cb) {
-    const interesses = req.body.interesses?.split(",");
     try {
       const extName = path.extname(file.originalname);
       const imageName = randomUUID() + extName;
       req.body.imagem = imageName;
-      validarSchema({ ...req.body, interesses }, usuarioSchema);
       cb(null, imageName);
     } catch (error) {
       cb(error);
@@ -118,12 +131,25 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
-app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
+app.post("/auth", async (req, res, next) => {
   try {
-    await cadastrarUsuarioUseCase.execute(req.body);
+    validarSchema(req.body, authSchema);
+    const token = await authUseCase.execute(req.body);
+    res.status(201).send({ token });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
+  const interesses = req.body.interesses?.split(",");
+  const input = new CadastrarUsuarioRequest({ ...req.body, interesses });
+  try {
+    validarSchema(input, usuarioSchema);
+    await cadastrarUsuarioUseCase.execute(input);
   } catch (err) {
     if (req.file) {
-      const imagePath = path.join(__dirname, `../uploads/${req.body.imagem}`);
+      const imagePath = path.join(__dirname, `../uploads/${input.imagem}`);
       fs.unlink(imagePath, (unlinkErr) => {
         if (unlinkErr) {
           console.error("Erro ao remover a imagem:", unlinkErr);
@@ -138,12 +164,15 @@ app.post("/usuario", upload.single("imagem"), async (req, res, next) => {
   res.status(204).send();
 });
 
-app.get("/usuario/apresentar", verificarToken, async (req, res, next) => {
+app.get("/apresentacao/apresentar", verificarToken, async (req, res, next) => {
   try {
-    const input = { ...req.query, idUsuario: req.usuario.id };
+    const input = new ApresentarUsuarioRequest({
+      ...req.query,
+      idUsuario: req.usuario.id,
+    });
     validarSchema(input, aprensetarUsuarioSchema);
 
-    const users = await usuarioRepository.findUsuariosApresentar(
+    const users = await apresentacaoRepository.findUsuariosApresentar(
       input.idUsuario,
       input.limit ?? 1
     );
@@ -158,29 +187,12 @@ app.get("/usuario/apresentar", verificarToken, async (req, res, next) => {
   }
 });
 
-app.get("/recado", verificarToken, async (req, res, next) => {
-  try {
-    const recados = await recadoRepository.find();
-
-    res.status(200).send(recados);
-  } catch (err) {
-    return next(err);
-  }
-});
-
-app.post("/auth", async (req, res, next) => {
-  try {
-    validarAuth(req.body);
-    const token = await authUseCase.execute(req.body);
-    res.status(201).send({ token });
-  } catch (err) {
-    return next(err);
-  }
-});
-
 app.post("/apresentacao", verificarToken, async (req, res, next) => {
   try {
-    const apresentacao = { ...req.body, idUsuario: req.usuario.id };
+    const apresentacao = new AvaliarUsuarioApresentadoRequest({
+      ...req.body,
+      idUsuario: req.usuario.id,
+    });
     validarSchema(apresentacao, apresentacaoSchema);
     await avaliarUsuarioUseCase.executar(apresentacao);
 
@@ -202,17 +214,26 @@ app.get("/apresentacao/match", verificarToken, async (req, res, next) => {
   }
 });
 
-app.use("/user-image", express.static(path.join(__dirname, "../uploads")));
+app.get("/recado", verificarToken, async (req, res, next) => {
+  try {
+    const recados = await recadoRepository.find();
+
+    res.status(200).send(recados);
+  } catch (err) {
+    return next(err);
+  }
+});
+
 app.use((err, req, res, next) => {
   console.log(err);
   if (err instanceof RequestBodyException) {
-    return res.status(400).send({ status: 400, detail: err.message });
+    return res.status(400).send(ErrorResponse.badRequest(err));
   }
 
   if (err instanceof UnauthorizedException) {
-    return res.status(401).send({ status: 401, detail: err.message });
+    return res.status(401).send(ErrorResponse.unauthorized());
   }
-  res.status(500).send({ status: 500, detail: "Ocorreu um erro interno!" });
+  res.status(500).send(ErrorResponse.internalError());
 });
 
 server.listen(port, () => {

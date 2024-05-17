@@ -1,6 +1,5 @@
-const { connectPostgres } = require("../infra/db/pg-client");
-const { Usuario } = require("./usuario.entity");
-const { getUrlImagem } = require("./utils");
+const { connectPostgres } = require("../../infra/db/pg-client");
+const { Usuario } = require("../entity/usuario.entity");
 
 class UsuarioRepository {
   /**
@@ -96,51 +95,6 @@ class UsuarioRepository {
 
     const usuario = new Usuario(model.rows[0]);
     return usuario;
-  }
-  /**
-   *
-   * @param {string} idUsuario
-   * @param {number} limit
-   * @returns {Promise<Usuario[]>}
-   */
-  async findUsuariosApresentar(idUsuario, limit) {
-    const client = connectPostgres;
-    const result = await client.query(
-      `SELECT 
-      tu.id,
-      tu.nome,
-      tu.cpf,
-      tu.data_nascimento AS "dataNascimento",
-      tu.imagem,
-      tu.genero,
-      tu.bio
-  FROM 
-      tb_usuario tu
-  INNER JOIN 
-      tb_usuario_interesse tui ON tu.genero = tui.genero
-  LEFT JOIN 
-      tb_apresentacao ta ON tu.id = ta.id_usuario_apresentado AND ta.id_usuario = '${idUsuario}'
-  WHERE 
-      tui.id_usuario = '${idUsuario}'
-      AND ta.id_usuario_apresentado IS NULL
-  LIMIT ${limit}`
-    );
-
-    if (!result.rows.length) {
-      return;
-    }
-
-    return result.rows.map((usuario) => {
-      const entity = new Usuario(usuario);
-      return {
-        id: entity.id,
-        name: entity.nome,
-        age: entity.getIdade(),
-        bio: entity.bio,
-        genero: entity.genero,
-        image_url: getUrlImagem(entity.imagem),
-      };
-    });
   }
 
   /**

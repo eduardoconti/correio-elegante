@@ -1,6 +1,7 @@
-const { encripter } = require("../infra/encripter");
-const { Usuario } = require("./usuario.entity");
-const { usuarioRepository } = require("./usuario.repository");
+const { encripter } = require("../../infra/encripter");
+const { CadastrarUsuarioRequest } = require("../dto/cadastrar-usuario.dto");
+const { Usuario } = require("../entity/usuario.entity");
+const { usuarioRepository } = require("../repository/usuario.repository");
 
 class CadastrarUsuarioUseCase {
   /**
@@ -12,10 +13,10 @@ class CadastrarUsuarioUseCase {
     this.encripter = encripter;
   }
   /**
-   * @param {Usuario} usuarioDto
+   * @param {CadastrarUsuarioRequest} input
    */
-  async execute(usuarioDto) {
-    const usuario = new Usuario(usuarioDto);
+  async execute(input) {
+    const usuario = new Usuario(input);
     const senhaEncriptada = await this.encripter.hash(usuario.senha);
     usuario.senha = senhaEncriptada;
     await this.usuarioRepository.save(usuario);

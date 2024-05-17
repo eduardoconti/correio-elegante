@@ -1,11 +1,16 @@
-const { usuarioRepository } = require("../usuario/usuario.repository");
+const {
+  usuarioRepository,
+} = require("../usuario/repository/usuario.repository");
+const { ErrorResponse } = require("./error-response");
 const { jwtService } = require("./jwt");
 
 async function authMiddleware(req, res, next) {
   const headerToken = req.headers["authorization"];
 
   if (!headerToken) {
-    return res.status(401).json({ status: 401, detail: "Token nao fornecido" });
+    return res
+      .status(401)
+      .json(ErrorResponse.unauthorized({ message: "Token nao fornecido" }));
   }
 
   const token = headerToken.split(" ")[1];
@@ -17,13 +22,17 @@ async function authMiddleware(req, res, next) {
     if (!usuario) {
       return res
         .status(401)
-        .json({ status: 401, detail: "Usuario nao encontrado" });
+        .json(
+          ErrorResponse.unauthorized({ message: "Usuario nao encontrado" })
+        );
     }
 
     req.usuario = usuario;
     next();
   } catch (err) {
-    return res.status(403).json({ status: 401, detail: "Token invalido" });
+    return res
+      .status(401)
+      .json(ErrorResponse.unauthorized({ message: "Token invalido" }));
   }
 }
 

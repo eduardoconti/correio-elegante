@@ -1,10 +1,12 @@
 const {
   UnauthorizedException,
-} = require("../exceptions/unauthorized.exception");
-const { encripter } = require("../infra/encripter");
-const { jwtService } = require("../infra/jwt");
-const { usuarioRepository } = require("../usuario/usuario.repository");
-const { getUrlImagem } = require("../usuario/utils");
+} = require("../../exceptions/unauthorized.exception");
+const { encripter } = require("../../infra/encripter");
+const { jwtService } = require("../../infra/jwt");
+const {
+  usuarioRepository,
+} = require("../../usuario/repository/usuario.repository");
+const { getUrlImagem } = require("../../usuario/utils/utils");
 
 class AuthUseCase {
   /**

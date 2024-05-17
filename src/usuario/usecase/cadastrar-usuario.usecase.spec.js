@@ -1,6 +1,8 @@
-const { Encripter } = require("../infra/encripter");
+const { Encripter } = require("../../infra/encripter");
 const { CadastrarUsuarioUseCase } = require("./cadastrar-usuario.usecase");
-const { UsuarioRepository } = require("./usuario.repository");
+const { CadastrarUsuarioRequest } = require("../dto/cadastrar-usuario.dto");
+const { UsuarioRepository } = require("../repository/usuario.repository");
+
 const encripterStub = new Encripter();
 const repositoryStub = new UsuarioRepository();
 describe("CadastrarUsuarioUseCase", () => {
@@ -18,7 +20,7 @@ describe("CadastrarUsuarioUseCase", () => {
     jest.spyOn(encripterStub, "hash").mockResolvedValue("encripted");
     jest.spyOn(repositoryStub, "save").mockResolvedValue();
 
-    const usuarioMock = {
+    const input = new CadastrarUsuarioRequest({
       bio: "Bio",
       cpf: "10254015905",
       dataNascimento: new Date("1995-12-05"),
@@ -28,12 +30,12 @@ describe("CadastrarUsuarioUseCase", () => {
       senha: "teste@123",
       interesses: ["F"],
       imagem: "123.jpg",
-    };
-    await useCase.execute(usuarioMock);
+    });
+    await useCase.execute(input);
 
-    expect(encripterStub.hash).toBeCalledWith(usuarioMock.senha);
+    expect(encripterStub.hash).toBeCalledWith(input.senha);
     expect(repositoryStub.save).toBeCalledWith({
-      ...usuarioMock,
+      ...input,
       senha: "encripted",
       dataInclusao: expect.any(Date),
       imagem: "123.jpg",
