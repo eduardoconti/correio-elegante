@@ -1,12 +1,12 @@
-const { encripter } = require("../../infra/encripter");
+const { Encripter } = require("../../infra/encripter");
 const { CadastrarUsuarioRequest } = require("../dto/cadastrar-usuario.dto");
 const { Usuario } = require("../entity/usuario.entity");
-const { usuarioRepository } = require("../repository/usuario.repository");
+const { UsuarioRepository } = require("../repository/usuario.repository");
 
 class CadastrarUsuarioUseCase {
   /**
-   * @param {usuarioRepository} repository
-   * @param {encripter} encripter
+   * @param {UsuarioRepository} repository
+   * @param {Encripter} encripter
    */
   constructor(repository, encripter) {
     this.usuarioRepository = repository;
@@ -23,9 +23,4 @@ class CadastrarUsuarioUseCase {
   }
 }
 
-const cadastrarUsuarioUseCase = new CadastrarUsuarioUseCase(
-  usuarioRepository,
-  encripter
-);
-
-module.exports = { cadastrarUsuarioUseCase, CadastrarUsuarioUseCase };
+module.exports = { CadastrarUsuarioUseCase };

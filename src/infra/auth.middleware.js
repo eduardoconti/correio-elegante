@@ -1,8 +1,5 @@
-const {
-  usuarioRepository,
-} = require("../usuario/repository/usuario.repository");
+const { container } = require("./container/container");
 const { ErrorResponse } = require("./error-response");
-const { jwtService } = require("./jwt");
 
 async function authMiddleware(req, res, next) {
   const headerToken = req.headers["authorization"];
@@ -14,9 +11,12 @@ async function authMiddleware(req, res, next) {
   }
 
   const token = headerToken.split(" ")[1];
+  const jwtService = container.get("jwtService");
+  const usuarioRepository = container.get("usuarioRepository");
 
   try {
     const tokenDecodificado = jwtService.verify(token);
+
     const usuario = await usuarioRepository.findById(tokenDecodificado.id);
 
     if (!usuario) {

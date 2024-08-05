@@ -13,6 +13,4 @@ class JWTService {
   }
 }
 
-const jwtService = new JWTService();
-
-module.exports = { jwtService, JWTService };
+module.exports = { JWTService };

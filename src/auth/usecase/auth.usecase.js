@@ -1,18 +1,18 @@
 const {
   UnauthorizedException,
 } = require("../../exceptions/unauthorized.exception");
-const { encripter } = require("../../infra/encripter");
-const { jwtService } = require("../../infra/jwt");
+const { Encripter } = require("../../infra/encripter");
+const { JWTService } = require("../../infra/jwt");
 const {
-  usuarioRepository,
+  UsuarioRepository,
 } = require("../../usuario/repository/usuario.repository");
 const { getUrlImagem } = require("../../usuario/utils/utils");
 
 class AuthUseCase {
   /**
-   * @param {usuarioRepository} usuarioRepository
-   * @param {encripter} encripter
-   * @param {jwtService} jwtService
+   * @param {UsuarioRepository} usuarioRepository
+   * @param {Encripter} encripter
+   * @param {JWTService} jwtService
    * @returns {string} token
    */
   constructor(usuarioRepository, encripter, jwtService) {
@@ -41,6 +41,4 @@ class AuthUseCase {
   }
 }
 
-const authUseCase = new AuthUseCase(usuarioRepository, encripter, jwtService);
-
-module.exports = { authUseCase, AuthUseCase };
+module.exports = { AuthUseCase };

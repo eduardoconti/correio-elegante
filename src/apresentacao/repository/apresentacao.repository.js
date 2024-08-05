@@ -109,6 +109,5 @@ class ApresentacaoRepository {
     });
   }
 }
-const apresentacaoRepository = new ApresentacaoRepository();
 
-module.exports = { apresentacaoRepository, ApresentacaoRepository };
+module.exports = { ApresentacaoRepository };

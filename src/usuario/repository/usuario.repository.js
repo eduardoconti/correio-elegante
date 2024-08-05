@@ -139,6 +139,4 @@ class UsuarioRepository {
   }
 }
 
-const usuarioRepository = new UsuarioRepository();
-
-module.exports = { usuarioRepository, UsuarioRepository };
+module.exports = { UsuarioRepository };

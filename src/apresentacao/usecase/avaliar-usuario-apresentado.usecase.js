@@ -34,12 +34,6 @@ class AvaliarUsuarioApresentadoUseCase {
   }
 }
 
-const avaliarUsuarioUseCase = new AvaliarUsuarioApresentadoUseCase(
-  usuarioRepository,
-  apresentacaoRepository
-);
-
 module.exports = {
-  avaliarUsuarioUseCase,
-  AvaliarUsuarioUseCase: AvaliarUsuarioApresentadoUseCase,
+  AvaliarUsuarioApresentadoUseCase,
 };
